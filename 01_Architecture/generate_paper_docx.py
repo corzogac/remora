@@ -1,6 +1,7 @@
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+import os
 
 def build_paper_docx():
     doc = docx.Document()
@@ -19,6 +20,7 @@ def build_paper_docx():
     p_meta.add_run("Gerald Corzo (corzogac)\n").bold = True
     p_meta.add_run("Hydroinformatics Research Group, IHE Delft Institute for Water Education\n")
     p_meta.add_run("Preprint Target: arXiv (cs.LG / cs.AI / cs.AR) | August 2026\n")
+    p_meta.add_run("Code Repository: https://github.com/corzogac/remora\n")
     
     doc.add_heading("Abstract", level=1)
     p_abs = doc.add_paragraph(
@@ -35,7 +37,7 @@ def build_paper_docx():
     )
     p_abs.runs[0].italic = True
     
-    doc.add_heading("1. Introduction", level=1)
+    doc.add_heading("1. Introduction & The Paradigm Shift", level=1)
     doc.add_paragraph(
         "Modern conversational and agentic Large Language Models operate under the symbolic text paradigm. Every interaction "
         "turn begins by re-ingesting extensive system prompts, architectural safety rules, and conversation logs. For instance, "
@@ -57,7 +59,14 @@ def build_paper_docx():
         "Where γ is dissipative damping (LayerNorm), D_s is the semantic dispersion tensor, and J_θ(h) represents FFN/MoE forcing injections."
     )
     
-    doc.add_heading("3. Empirical Benchmarks & Experimental Results", level=1)
+    fig1_path = "C:/Users/gco/Dropbox/04-Work/Projects/Remora/01_Architecture/figures/fig1_wave_phase_dynamics.png"
+    if os.path.exists(fig1_path):
+        doc.add_picture(fig1_path, width=Inches(6.0))
+        p_cap = doc.add_paragraph("Figure 1: 2D continuous wave field across context sequence (t) and layer depth (τ) across Ground State, Persona Standing Wave, and Dialog Traveling Perturbation.")
+        p_cap.runs[0].font.size = Pt(9.5)
+        p_cap.runs[0].font.italic = True
+
+    doc.add_heading("3. Empirical Benchmarks & Performance Indicators", level=1)
     
     doc.add_heading("Table 1: Zero-Token Latent Standing Wave Injection Ablation", level=2)
     t1 = doc.add_table(rows=1, cols=5)
@@ -82,7 +91,13 @@ def build_paper_docx():
         for i, val in enumerate(row):
             cells[i].text = val
 
-    doc.add_paragraph("\n")
+    fig2_path = "C:/Users/gco/Dropbox/04-Work/Projects/Remora/01_Architecture/figures/fig2_ttft_and_kv_savings.png"
+    if os.path.exists(fig2_path):
+        doc.add_picture(fig2_path, width=Inches(6.0))
+        p_cap2 = doc.add_paragraph("Figure 2: Time-to-First-Token (TTFT) latency speedup and KV-cache memory elimination scaling with prompt size.")
+        p_cap2.runs[0].font.size = Pt(9.5)
+        p_cap2.runs[0].font.italic = True
+
     doc.add_heading("Table 2: MoE Expert Prefetching on Activation Wake (3,200 Decisions)", level=2)
     t2 = doc.add_table(rows=1, cols=4)
     t2.style = 'Table Grid'
@@ -103,16 +118,30 @@ def build_paper_docx():
         for i, val in enumerate(row):
             cells[i].text = val
             
-    doc.add_heading("4. Strategic Value & Next Milestones", level=1)
+    fig3_path = "C:/Users/gco/Dropbox/04-Work/Projects/Remora/01_Architecture/figures/fig3_moe_prefetch_accuracy.png"
+    if os.path.exists(fig3_path):
+        doc.add_picture(fig3_path, width=Inches(6.0))
+        p_cap3 = doc.add_paragraph("Figure 3: MoE predictive prefetching accuracy and NVMe I/O stall elimination across prediction algorithms.")
+        p_cap3.runs[0].font.size = Pt(9.5)
+        p_cap3.runs[0].font.italic = True
+
+    doc.add_heading("4. The Economic & GPU Billing Paradigm Shift", level=1)
     doc.add_paragraph(
-        "Remora provides a foundation for the next generation of inference engines:\n"
-        "1. Standalone Core: Remora defines a universal C/C++ engine extension applicable to both pure C streaming (Colibri) and hybrid engines (llama.cpp).\n"
-        "2. Zero-Token Agents: Removing the prompt tax transforms edge and cloud deployments, allowing agents to hold complex personas with zero runtime penalty.\n"
-        "3. Scaled Validation on Hugging Face: Testing next on 30B+ MoE architectures using cloud Hugging Face infrastructure."
+        "Historically, GPU compute providers have billed AI inference per 1M Input/Output Tokens. This pricing model exists "
+        "solely because architectures re-tokenize symbolic text from scratch on every turn. By shifting to continuous latent "
+        "injections, Remora fundamentally breaks the link between prompt volume and runtime GPU cost. Users pay only for "
+        "active delta queries, eliminating up to 90% of redundant multi-turn prefill costs."
     )
     
+    fig4_path = "C:/Users/gco/Dropbox/04-Work/Projects/Remora/01_Architecture/figures/fig4_economic_cost_paradigm.png"
+    if os.path.exists(fig4_path):
+        doc.add_picture(fig4_path, width=Inches(6.0))
+        p_cap4 = doc.add_paragraph("Figure 4: Cumulative multi-turn inference cost comparison demonstrating the decoupling of cost from prompt volume.")
+        p_cap4.runs[0].font.size = Pt(9.5)
+        p_cap4.runs[0].font.italic = True
+
     doc.save("C:/Users/gco/Dropbox/04-Work/Projects/Remora/01_Architecture/Remora-Arxiv-Paper.docx")
-    print("Successfully built Remora-Arxiv-Paper.docx")
+    print("Successfully rebuilt Remora-Arxiv-Paper.docx with embedded figures")
 
 if __name__ == "__main__":
     build_paper_docx()

@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-08-20T13:00:00.493853+00:00",
+  "model": "LFM2.5-8B-A1B",
+  "tag": "short",
+  "api_mode": true,
+  "api_timing": [
+    {
+      "run": 1,
+      "wall_s": 19.35,
+      "gen_tok_s": 11.13,
+      "prompt_tok_s": 1.45,
+      "n_pred": 182,
+      "n_prompt": 4
+    },
+    {
+      "run": 2,
+      "wall_s": 14.08,
+      "gen_tok_s": 14.33,
+      "prompt_tok_s": 28.61,
+      "n_pred": 200,
+      "n_prompt": 4
+    },
+    {
+      "run": 3,
+      "wall_s": 9.99,
+      "gen_tok_s": 17.59,
+      "prompt_tok_s": 39.51,
+      "n_pred": 174,
+      "n_prompt": 4
+    }
+  ]
+}

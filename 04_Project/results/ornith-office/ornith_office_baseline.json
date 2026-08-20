@@ -1,0 +1,29 @@
+{
+  "experiment": "ornith-1.5-35b-a3b-office-untraced-baseline",
+  "date": "2026-08-21",
+  "platform": "office (un-ihe 100.120.94.49, Win11, i9-11900H, 32GB RAM, RTX A2000 Laptop 4GB)",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M (21,713,462,848 bytes)",
+  "runtime": "remora-llama fork b10509+remora-trace (build-ninja), REMORA_TRACE_FILE NOT set (hook no-op)",
+  "server_args": "-ngl 6 -c 8192 --threads 16 --reasoning off --reasoning-budget 0 --port 11438",
+  "prompt": "Write a Python function that computes the Fibonacci sequence iteratively. Just the code.",
+  "runs": [
+    {"run": 1, "gen_tok_s": 3.0902, "prompt_tok_s": 2.8774, "completion_tokens": 96, "note": "cold: model load + first-touch page-ins"},
+    {"run": 2, "gen_tok_s": 4.6130, "prompt_tok_s": 8.8205, "completion_tokens": 98, "note": "warm pages, prompt cached (cache_n=24)"},
+    {"run": 3, "gen_tok_s": 6.3617, "prompt_tok_s": 9.0142, "completion_tokens": 73, "note": "fully warm, prompt cached (cache_n=24)"}
+  ],
+  "comparison_vs_traced": {
+    "traced_cold_gen_tok_s": 2.6525,
+    "baseline_cold_gen_tok_s": 3.0902,
+    "trace_overhead_pct": 14.2,
+    "traced_cold_prompt_tok_s": 2.3286,
+    "baseline_cold_prompt_tok_s": 2.8774,
+    "trace_overhead_prompt_pct": 19.1,
+    "lfm_pilot_trace_overhead_pct": 23.0,
+    "caveat": "traced run is single cold completion; warm-vs-warm delta still TBD (need multi-run traced batch)"
+  },
+  "warmup_observation": {
+    "cold_to_warm_gen_speedup_x": 2.06,
+    "note": "3.09 -> 6.36 tok/s as the 21.7GB mmap working set warms in page cache; this IS the stall surface remora prefetch targets"
+  },
+  "artifacts": ["trace_ornith_baseline.log on office", "run_ornith_baseline.bat"]
+}

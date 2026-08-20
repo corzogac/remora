@@ -105,3 +105,25 @@ Next: baseline (untraced) vs traced delta on Ornith with identical flags,
 then --remora-gate K pilot on the flat router (expect small drift but also
 small compute savings since mass is spread), then learned-observer training
 data prep from this trace.
+
+## 2026-08-21 — ORNITH UNTRACED BASELINE (office A2000) — trace overhead
+
+Same flags as the traced run (-ngl 6, -c 8192, 16 threads), REMORA_TRACE_FILE
+unset (hook is a compile-time no-op without it), 3 identical completions.
+
+| run | gen tok/s | prompt tok/s | note |
+|---|---|---|---|
+| 1 | 3.09 | 2.88 | cold: model load + first-touch page-ins |
+| 2 | 4.61 | 8.82 | warm pages, prompt cached (cache_n=24) |
+| 3 | 6.36 | 9.01 | fully warm |
+
+vs traced (single cold completion): 2.65 gen / 2.33 prompt.
+-> Trace overhead (cold vs cold): ~14.2% gen, ~19.1% prompt (LFM pilot: 23%).
+Caveat: traced run was single-shot; warm-vs-warm delta still TBD.
+
+Warmup observation (the remora stall story in one number): cold->warm decode
+speeds up 2.06x (3.09 -> 6.36 tok/s) purely from the 21.7GB mmap working set
+warming in page cache. Expert page-ins are ~half the achievable throughput
+on this host; prefetch hides exactly this.
+
+Results: results/ornith-office/ornith_office_baseline.json.

@@ -152,6 +152,26 @@ We have introduced Remora, a wave-dynamic framework for zero-token prompt inject
 
 ---
 
+## 7. Version 2 — Status Update (August 2026)
+
+**Validation status**: All quantitative claims in Sections 1–6 currently rest on
+controlled *simulations* (synthetic random-weight transformers, dim 256). The full
+ablation report in this repository (`03_Experiments/results/experiment_report.md`)
+reports **44.47% Top-K overlap** for the learned observer and **~40.9% estimated**
+NVMe stall reduction — figures below the headline values stated in the abstract
+(94.06% Top-K overlap; ~86.5% stall reduction). Until the abstract numbers can be
+traced to reproducible runs, readers should treat the abstract's upper bounds as
+aspirational.
+
+**V2 program** (in progress, see `04_Project/Remora-V2-Experiment-Plan.md`):
+1. Replace all simulation metrics with real-model measurements on llama.cpp (CUDA),
+   primary model LFM2.5-8B-A1B (MoE, 1B active) on an RTX A2000 4 GB host.
+2. Standardize metric definitions (Top-K with explicit K; stall measured as wall-clock
+   I/O wait), report mean ± std across runs, and update this draft accordingly.
+3. Publish the instrumented `remora-llama` fork and trace analysis tools with the paper.
+
+---
+
 ## References
 
 1. Chen, R. T., Rubanova, Y., Bettencourt, J., & Duvenaud, D. K. (2018). *Neural ordinary differential equations*. NeurIPS 2018.

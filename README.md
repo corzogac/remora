@@ -90,3 +90,20 @@ python 03_Experiments/run_experiment_2.py
 # 3. Build the C engine extension for Colibri / llama.cpp
 cd 02_Remora-Core && make
 ```
+
+---
+
+## 🧪 V2 — Real-Model Validation (2026-08)
+
+V1 results are simulation-based. V2 replaces every headline number with reproducible
+real-model measurements on the office server (RTX A2000 4 GB, llama.cpp CUDA build,
+LFM2.5-8B-A1B MoE) and updates the arXiv draft. Includes:
+
+- `04_Project/Remora-V2-Experiment-Plan.md` — full protocol (integrity rules, Exp A/B/C,
+  metrics, success criteria, timeline)
+- `04_Project/benchmarks/` — trace recorder + analyzer (`parse_llama_trace.py`)
+- `04_Project/results/` — real-model results (populated as experiments complete)
+
+**Integrity notice (V1)**: the paper abstract's headline numbers (94.06% Top-K overlap,
+~86.5% stall reduction) exceed the repo's own experiment report (44.47% Top-K overlap,
+~40.9% estimated stall reduction). V2 reconciles or rewrites these claims; see the plan §0.

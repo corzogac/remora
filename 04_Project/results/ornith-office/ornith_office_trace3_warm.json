@@ -1,0 +1,24 @@
+{
+  "experiment": "ornith-1.5-35b-a3b-office-traced-warm-3x",
+  "date": "2026-08-21",
+  "platform": "office (un-ihe 100.120.94.49, Win11, i9-11900H, 32GB RAM, RTX A2000 Laptop 4GB)",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M (21,713,462,848 bytes)",
+  "runtime": "remora-llama fork b10509+remora-trace, REMORA_TRACE_FILE=C:\\models\\trace_ornith3.jsonl",
+  "server_args": "-ngl 6 -c 8192 --threads 16 --reasoning off --reasoning-budget 0 --port 11440",
+  "runs": [
+    {"run": 1, "gen_tok_s": 1.8827, "completion_tokens": 96, "note": "cold, traced"},
+    {"run": 2, "gen_tok_s": 3.9880, "completion_tokens": 97, "note": "warm, traced"},
+    {"run": 3, "gen_tok_s": 3.9341, "completion_tokens": 85, "note": "warm, traced"}
+  ],
+  "comparison_untraced_baseline": {
+    "baseline_gen_tok_s": [3.0902, 4.6130, 6.3617],
+    "traced_warm_overhead_pct_run2": 13.5,
+    "traced_warm_overhead_pct_run3": 38.2,
+    "traced_warm_mean_overhead_pct": 28.0,
+    "traced_cold_overhead_pct": 14.2,
+    "note": "trace hook cost grows on warm runs (compute is faster -> synchronous JSONL write per op is a bigger fraction); overhead range 14-38%"
+  },
+  "outputs": "all 3 completions correct iterative fibonacci (no drift from tracing)",
+  "trace_evidence": "trace_ornith3.jsonl 49,441,064 bytes (3 runs, ~76 tokens/layer each)",
+  "artifacts": ["run_ornith_trace3.bat", "trace_ornith3.jsonl"]
+}

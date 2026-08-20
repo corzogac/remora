@@ -154,3 +154,25 @@ prefetch/observer direction is the lever; compute gating is a dead end.
 
 Results: results/ornith-office/ornith_office_gate1.json.
 Next: gate1 on HF T4 (expert matmuls on-GPU), traced warm multi-shot delta.
+
+## 2026-08-21 — ORNITH TRACED-WARM 3x (office A2000) — warm trace overhead
+
+3 completions WITH the trace hook, same flags as baseline (run_ornith_trace3.bat,
+port 11440). Trace evidence: trace_ornith3.jsonl (49.4 MB).
+
+| run | traced tok/s | baseline tok/s | overhead |
+|---|---|---|---|
+| 1 (cold) | 1.88 | 3.09 | ~39% (also run-to-run variance) |
+| 2 (warm) | 3.99 | 4.61 | 13.5% |
+| 3 (warm) | 3.93 | 6.36 | 38.2% |
+
+Warm mean overhead ~28% (baseline warm mean 5.49 vs traced warm mean 3.96).
+Cold overhead from the single traced run: ~14%.
+
+Interpretation: the trace hook's cost grows on warm runs — when compute is
+fast (warm pages), the synchronous per-op JSONL write (router logits etc.)
+becomes a larger fraction of decode. Range: 14-38%, call it ~25% typical on
+this host. No output drift from tracing (all 3 completions correct).
+
+Implication for the paper: before/after comparisons must keep instrumentation
+constant on both sides AND control for warm-up state (run count parity).

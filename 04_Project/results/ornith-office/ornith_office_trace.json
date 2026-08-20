@@ -1,0 +1,53 @@
+{
+  "experiment": "ornith-1.5-35b-a3b-office-first-trace",
+  "date": "2026-08-21",
+  "platform": "office (un-ihe 100.120.94.49, Win11, i9-11900H 8c/16t, 32GB RAM, RTX A2000 Laptop 4GB, NVMe)",
+  "model": {
+    "repo": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+    "file": "Ornith-1.5-35B-Q4_K_M.gguf",
+    "bytes": 21713462848
+  },
+  "runtime": "remora-llama fork b10509+remora-trace, C:\\models\\llama-cpp-remora\\build-ninja\\bin\\llama-server.exe",
+  "server_args": "-ngl 6 -c 8192 --threads 16 --reasoning off --reasoning-budget 0 --port 11437",
+  "trace_file": "trace_ornith.jsonl (15,810,795 bytes, 76 traced tokens)",
+  "completion": {
+    "prompt_tokens": 28,
+    "completion_tokens": 73,
+    "gen_tok_s": 2.65,
+    "prompt_tok_s": 2.33
+  },
+  "architecture_from_trace": {
+    "moe_layers": 40,
+    "experts_per_layer": 256,
+    "topk": 2,
+    "shared_expert": true,
+    "nextn_heads": true
+  },
+  "router_stats": {
+    "consecutive_token_exact_topk_pct": 0.0,
+    "consecutive_token_jaccard_pct": 21.5,
+    "router_entropy_nats": {"min_layer": 5.06, "max_layer": 5.46, "uniform_max": 5.545},
+    "distinct_experts_ever_selected": 256,
+    "distinct_experts_per_layer": {"min": 207, "max": 229, "mean": 216},
+    "top_expert_selection_share_pct": 0.93,
+    "top1_weight_mean_pct": 5.0,
+    "top1_weight_median_pct": 3.1
+  },
+  "stall_data": {
+    "expert_ffn_ms_per_token": {"down": 146.7, "gate": 124.7, "up": 122.7},
+    "expert_ffn_share_of_traced_time_pct": 96,
+    "all_traced_ms_total": 31166,
+    "op_timing_us": {"median": 1297, "p99": 61543, "max": 406822},
+    "ops_gt_5ms": 718,
+    "ops_gt_20ms": 264,
+    "total_op_records": 76000
+  },
+  "notes": [
+    "First attempt with -ngl 99 failed: cudaMalloc OOM (tried to allocate 19.9GB on 4GB A2000). Rerun with -ngl 6 succeeded; GPU holds layers 0-5, rest CPU.",
+    "Stall tail is 30-300x the median op time: cold mmap page-ins of expert weights from the 21.7GB file (max single-op stall 406ms). This is the remora prefetch target.",
+    "Router is very flat: 0% exact same-topk persistence across consecutive tokens (LFM pilot: 4%), 21.5% Jaccard (LFM: 32%), entropy 91-98% of uniform max, all 256 experts used within 76 tokens.",
+    "Naive same-top-k prefetch would have ~0 hit rate on this model; supports the learned-observer claim.",
+    "First analysis script had a units bug (us/1e6 labelled 'ms'); corrected here (us/1e3 = ms)."
+  ],
+  "artifacts": ["trace_ornith.jsonl", "analyze_ornith_trace.py", "stall_stats.py"]
+}

@@ -65,3 +65,43 @@ Interpretation:
 Next runs planned: same trace on T4 (HF job, custom image), Qwen2.5-MoE-A2.7B
 (on Jared or office), gating experiment (--remora-gate K: compute only top-K
 experts, measure drift vs speedup).
+
+## 2026-08-21 — FIRST ORNITH-1.5-35B-A3B TRACE (office A2000)
+
+Model: ornith-ai/Ornith-1.5-35B-A3B Q4_K_M (21.7 GB), remora llama.cpp build,
+-ngl 6 (layers 0-5 GPU, rest CPU), -c 8192, 16 threads, reasoning off.
+Server timings: 2.65 tok/s gen, 2.33 tok/s prompt. Trace: trace_ornith.jsonl
+(15.8 MB, 76 tokens traced). Full results: results/ornith-office/.
+
+Architecture from trace: 40 MoE layers, 256 experts/layer, top-2 routing,
+shared expert + Qwen3 nextn heads (seen in model-load tensor log).
+
+Router profile — EXTREMELY flat (opposite of LFM2):
+- consecutive-token exact top-k persistence: 0.0% (LFM2: 4.0%)
+- consecutive-token Jaccard: 21.5% (LFM2: ~32%)
+- router softmax entropy 5.06-5.46 nats vs ln(256)=5.545 uniform max (91-98%)
+- all 256 experts selected within 76 tokens; 207-229 distinct per layer
+- top expert selection share 0.93%; top-1 weight median 3.1%
+-> No hot experts, no persistent path. Naive same-top-k prefetch has ZERO
+   hit rate here. Ornith-1.5's GRPO training appears to produce deliberately
+   balanced routing. The learned-observer story is now the ONLY prefetch path.
+
+Stall data (the remora target is real):
+- expert FFN (down+gate+up) = 96% of traced op time, ~394 ms/token total
+- steady-state op median 1.3 ms; p99 61.5 ms; MAX single-op stall 406 ms
+- 718 ops > 5 ms and 264 ops > 20 ms of 76,000 op records
+- spikes = cold mmap page-ins of expert weights from the 21.7 GB file
+  (first-touch of each layer's experts); prefetch/warm-up would hide them.
+
+Operational notes:
+- -ngl 99 on 4 GB A2000 = cudaMalloc OOM (19.9 GB buffer) -> model fails to
+  load. This build has no auto-fallback; cap layers to fit VRAM.
+- First analysis pass had a units bug (us/1e6 labelled "ms" -> was seconds);
+  corrected in results/ornith-office/ornith_office_trace.json.
+- Download via resumable dl_ornith.py (msys64 python, schtasks SYSTEM) at
+  ~120 MB/s office link; byte-verified against HF x-linked-size.
+
+Next: baseline (untraced) vs traced delta on Ornith with identical flags,
+then --remora-gate K pilot on the flat router (expect small drift but also
+small compute savings since mass is spread), then learned-observer training
+data prep from this trace.

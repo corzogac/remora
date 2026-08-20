@@ -1,0 +1,32 @@
+name: Remora Benchmark (before/after)
+
+on:
+  push:
+    branches: [main]
+    paths: ['02_Remora-Core/**', '04_Project/benchmarks/**']
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'   # weekly Monday 03:00
+
+jobs:
+  bench:
+    runs-on: [self-hosted, office, windows]   # office server runner (RTX A2000)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run baseline + Remora benchmarks
+        shell: cmd
+        run: |
+          python 04_Project\benchmarks\run_bench.py ^
+            --model C:\models\LiquidAI\LFM2.5-8B-A1B-Q4_K_M.gguf ^
+            --baseline-dir C:\models\llama-cpp-b10509 ^
+            --remora-dir C:\models\llama-cpp-remora ^
+            --tag auto
+
+      - name: Commit results
+        run: |
+          git config user.name "remora-bench"
+          git config user.email "bench@remora.local"
+          git add 04_Project/results/
+          git diff --cached --quiet || git commit -m "bench: automated before/after run"
+          git push origin main

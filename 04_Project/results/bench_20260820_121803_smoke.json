@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-08-20T10:17:24.662801+00:00",
+  "model": "LFM2.5-8B-A1B",
+  "tag": "smoke",
+  "api_mode": true,
+  "api_timing": [
+    {
+      "run": 1,
+      "wall_s": 12.61,
+      "gen_tok_s": 15.2,
+      "prompt_tok_s": 44.42,
+      "n_pred": 186,
+      "n_prompt": 17
+    },
+    {
+      "run": 2,
+      "wall_s": 13.06,
+      "gen_tok_s": 15.4,
+      "prompt_tok_s": 36.61,
+      "n_pred": 200,
+      "n_prompt": 4
+    },
+    {
+      "run": 3,
+      "wall_s": 13.3,
+      "gen_tok_s": 14.96,
+      "prompt_tok_s": 28.89,
+      "n_pred": 197,
+      "n_prompt": 4
+    }
+  ]
+}

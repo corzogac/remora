@@ -153,6 +153,25 @@ traced run; traced op wall-times overlap (sum >> decode wall time), so
 removing ops does not remove wall time 1:1. Expert gating can only pay off
 where expert matmuls ARE the critical path -> full-GPU host (HF T4/A10G).
 
+## 2026-08-21 — ORNITH L4 FULL-GPU BASELINE (HF Jobs l4x1) — the right regime
+
+sm8x remora build (b10512 fe2673647, no gate), -ngl 90, traced, 3 runs:
+
+| run | gen tok/s | prompt tok/s | tokens | finish |
+|---|---|---|---|---|
+| 1 (cold) | 27.13 | 92.78 | 73 | stop |
+| 2 | 27.51 | 42.64 | 73 | stop |
+| 3 | 27.30 | 41.45 | 73 | stop |
+
+Steady-state ~27.3 tok/s, no warmup curve (model fully in VRAM) — 4.3x the
+office warm rate (6.36). GPU is now the critical path: this is the host where
+gating can show a real effect. Trace: ornith_l4_base.jsonl (41.5MB, 257k
+lines) in gcorzo/remora-traces; results JSON in results/ornith-office/l4/.
+
+NOTE: this binary predates the gate fix (3e894f758) but runs WITHOUT
+REMORA_GATE_K, so it is a valid baseline. The gate1 rerun uses the rebuilt
+binary (bundle + remora-gate-fix.patch).
+
 Honest boundary result for the paper: on the offload-bound regime, remora's
 prefetch/observer direction is the lever; compute gating is a dead end.
 

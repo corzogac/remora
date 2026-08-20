@@ -1,0 +1,21 @@
+{
+  "experiment": "ornith-1.5-35b-a3b-l4-fullgpu-baseline",
+  "date": "2026-08-21",
+  "platform": "HF Jobs l4x1 (Nvidia L4 24GB, 8 vCPU, 30GB RAM)",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M (21,713,462,848 bytes)",
+  "runtime": "remora-llama fork sm8x Linux build (b10512 fe2673647, no gate), REMORA_TRACE_FILE set (traced)",
+  "server_args": "-ngl 90 -c 8192 --reasoning off --reasoning-budget 0",
+  "runs": [
+    {"run": 1, "gen_tok_s": 27.13, "prompt_tok_s": 92.78, "completion_tokens": 73, "finish": "stop", "note": "cold (prompt includes model load)"},
+    {"run": 2, "gen_tok_s": 27.51, "prompt_tok_s": 42.64, "completion_tokens": 73, "finish": "stop"},
+    {"run": 3, "gen_tok_s": 27.30, "prompt_tok_s": 41.45, "completion_tokens": 73, "finish": "stop"}
+  ],
+  "comparison_office": {
+    "office_warm_gen_tok_s": 6.36,
+    "l4_steady_gen_tok_s": 27.30,
+    "speedup_x": 4.29,
+    "note": "full-GPU regime: no page-cache warmup curve (all runs identical); GPU is the critical path -> the correct host to test gating"
+  },
+  "trace": "ornith_l4_base.jsonl 41.5MB, 257,520 lines, uploaded to gcorzo/remora-traces",
+  "artifacts": ["ornith_l4_base_resp1..3.json (local l4/)", "ornith_l4_base.jsonl on HF"]
+}

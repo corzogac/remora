@@ -18,7 +18,7 @@
     "baseline_warm_mean_runs23": 5.4873,
     "gate1_warm_mean_runs23": 5.8308,
     "warm_delta_pct": 6.3,
-    "verdict": "no consistent speedup; within run-to-run noise on a shared box. Compute gating is NOT the lever here."
+    "verdict": "INVALID — RETRACTED 2026-08-21: office binary (b10510, commit 1d66c71d5) predates the gate feature (fe2673647); REMORA_GATE_K was silently ignored. Real gate test moved to L4 full-GPU runs (first L4 attempt crashed on the pre-fix gate bug, fixed in 3e894f758)."
   },
   "drift": {
     "baseline_output": "correct iterative fibonacci (while-loop variant)",

@@ -139,9 +139,13 @@ REMORA_GATE_K=1: forced top-1 routing (2nd routed expert matmuls skipped),
 | 2 (warm) | 5.75 | 4.61 |
 | 3 (warm) | 5.91 | 6.36 |
 
-Verdict: no consistent speedup (warm mean +6.3%, within noise). Output drift:
-NONE on this task — both produce the correct iterative fibonacci (functionally
-identical; single sample, not generalizable).
+Verdict: **INVALID — RETRACTED 2026-08-21.** The office binary (b10510, commit
+1d66c71d5) predates the gate feature commit fe2673647: REMORA_GATE_K was
+silently IGNORED. The office "gate1" run was just another untraced baseline
+(no gating happened). The real gate test is the L4 full-GPU run (see below);
+its first attempt crashed on the pre-fix gate bug (GGML_ASSERT ggml_view_2d,
+fixed in 3e894f758 "gate K<4 crash"), and is being rerun with the fixed
+binary. The numbers below are retained only as an extra baseline datapoint.
 
 Why: at -ngl 6 with 1-token batches the wall is CPU<->GPU offload sync + cold
 mmap page-ins, not expert FLOPs. nvidia-smi showed 0% GPU util during the

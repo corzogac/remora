@@ -25,8 +25,12 @@ hf jobs run ghcr.io/ggml-org/llama.cpp:server-cuda --flavor t4-small --timeout 9
 ```
 
 KEY FACTS (learned the hard way, 2026-08-20):
-- The prebuilt image's binary is **`/app/llama-server`** (NOT on PATH) — set
-  `LD_LIBRARY_PATH=/app` and call it by full path. No `llama-bench` binary ships.
+- **`bash -lc` BREAKS: the CLI's own `-l` (--label) eats `-lc`** and bash receives
+  the script as a filename. Always use **`bash -c`** (verified via argv probe
+  job: `python -c "import sys;print(sys.argv)"` → `['-c']`).
+- The prebuilt image's binary is **`/app/llama-server`** (NOT on PATH) — call it
+  by full path. No `llama-bench` binary ships. Image is newer than b10509
+  (fingerprint b10524).
 - Download the GGUF in the FOREGROUND before starting the server (backgrounding
   `curl && llama-server &` makes the readiness poll race the download).
 - Server ready-check must be conditional (`if curl ...; then ... else cat log; fi`).
@@ -34,6 +38,11 @@ KEY FACTS (learned the hard way, 2026-08-20):
 - The job CLI blocks and streams stdout; jobs also appear at
   `https://huggingface.co/jobs/gcorzo/...` and are inspectable via `hf jobs ps/logs`.
 - Cost per 4-minute T4 job ≈ $0.03.
+
+VALIDATED recipe (full run, 2026-08-20): model download (5.15 GB, byte-verified),
+server boot, chat completion at **138.3 tok/s** (eval 477 ms/67 tok), 66 graphs
+reused (prefix caching live). Weekly schedule (Mon 03:00 UTC, id 6a871c26...):
+`hf jobs scheduled run "0 3 * * 1" --flavor t4-small --timeout 15m <image> bash -c '<same script>'`
 
 Result (2026-08-20): LFM2.5-8B-A1B Q4_K_M on T4 full GPU = **~138 tok/s gen**,
 ~250 tok/s prompt — 7.8× faster than the office server's partial-offload A2000.

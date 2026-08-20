@@ -14,7 +14,33 @@ benchmarks (llama-bench) **before and after** the Remora changes.
   **remora build** with identical flags/models/prompts → true before/after diff
 - results are committed back to `04_Project/results/`
 
-## Option B — HF Space (GPU) mirror
+## Option B — HF Jobs (works on free accounts with credits; validated 2026-08-20)
+
+HF Spaces hosting requires PRO (402 on free accounts), but **`hf jobs run`** works
+with credits (your €10 ≈ 25 h of t4-small at $0.40/hr):
+
+```
+hf jobs run ghcr.io/ggml-org/llama.cpp:server-cuda --flavor t4-small --timeout 90m \
+  --label experiment=remora-baseline -- bash -c '<benchmark script>'
+```
+
+KEY FACTS (learned the hard way, 2026-08-20):
+- The prebuilt image's binary is **`/app/llama-server`** (NOT on PATH) — set
+  `LD_LIBRARY_PATH=/app` and call it by full path. No `llama-bench` binary ships.
+- Download the GGUF in the FOREGROUND before starting the server (backgrounding
+  `curl && llama-server &` makes the readiness poll race the download).
+- Server ready-check must be conditional (`if curl ...; then ... else cat log; fi`).
+- Pass `--reasoning off --reasoning-budget 0` for direct-answer mode.
+- The job CLI blocks and streams stdout; jobs also appear at
+  `https://huggingface.co/jobs/gcorzo/...` and are inspectable via `hf jobs ps/logs`.
+- Cost per 4-minute T4 job ≈ $0.03.
+
+Result (2026-08-20): LFM2.5-8B-A1B Q4_K_M on T4 full GPU = **~138 tok/s gen**,
+~250 tok/s prompt — 7.8× faster than the office server's partial-offload A2000.
+Saved to `results/hf_t4_baseline_lfm.json`. The remora-llama fork must run the
+IDENTICAL job/flags to produce the before/after delta.
+
+## Option C — HF Spaces (GPU) mirror
 
 For public, reproducible results with a paper link:
 

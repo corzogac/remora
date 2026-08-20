@@ -1,0 +1,22 @@
+{
+  "experiment": "hf-t4-baseline-lfm2.5-8b-a1b",
+  "date": "2026-08-20",
+  "platform": "HF Jobs, flavor t4-small (Nvidia T4 16GB, 4 vCPU)",
+  "image": "ghcr.io/ggml-org/llama.cpp:server-cuda (binary at /app/llama-server)",
+  "model": "LiquidAI/LFM2.5-8B-A1B-GGUF Q4_K_M (5,155,564,768 bytes)",
+  "server_args": "-c 8192 -ngl 99 --reasoning off --reasoning-budget 0",
+  "runs": [
+    {"run": 1, "gen_tok_s": 137.0, "prompt_tok_s": 0.5, "note": "cold start incl. model load (prompt_ms 43s)"},
+    {"run": 2, "gen_tok_s": 139.0, "prompt_tok_s": 243.4, "note": "warm, kv cache_n=18"},
+    {"run": 3, "gen_tok_s": 139.3, "prompt_tok_s": 251.9, "note": "warm, kv cache_n=18"}
+  ],
+  "gen_tok_s_mean": 138.4,
+  "comparison": {
+    "office_server_rtx_a2000_4gb_partial_offload": 17.7,
+    "hf_t4_full_gpu": 138.4,
+    "speedup": 7.8
+  },
+  "job_ids": ["6a86ff49c81709766c80296b", "6a87000bc81709766c80296d"],
+  "notes": "Baseline for the Remora before/after comparison. The remora-llama fork must run the identical job (same image pattern, same flags) to produce the delta. LFM's 1B-active MoE is compute-light; the larger expected gain case is Qwen2.5-MoE-A2.7B (weights exceed VRAM).",
+  "reproduce": "hf jobs run ghcr.io/ggml-org/llama.cpp:server-cuda --flavor t4-small --timeout 90m -- bash -c '<script in 04_Project/hf-and-ci.md>'"
+}

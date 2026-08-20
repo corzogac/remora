@@ -1,5 +1,32 @@
 # Remora — Experiment Log
 
+## 2026-08-20 — HF T4 parallel runs (A/B/C) — REAL CROSS-HARDWARE/CROSS-MODEL DATA
+
+Three parallel T4 jobs with the remora Linux build (static, sm_75). Traces:
+`lfm_t4_trace.jsonl` (33.7k lines), `qwen15moe_t4_trace.jsonl` (117.6k),
+`lfm_t4_gate4.jsonl` (33.7k). Key results:
+
+| metric | LFM T4 | LFM A2000 (pilot) | Qwen1.5-MoE T4 |
+|---|---|---|---|
+| experts | 64 | 64 | 120 |
+| distinct fired | 32/64 | 32/64 | 60/120 |
+| router top-1 prob | 0.321 | 0.310 | 0.100 |
+| top-1 mass share | 67.5% | 67.8% | 37.7% |
+| naive exact-set hit | 6.6% | 4.0% | 0.0% |
+| naive Jaccard | 0.33–0.56 | 0.19–0.48 | 0.05–0.10 |
+| recurrent tail | GONE (12-14us) | 10x (274-380us) | — |
+| throughput (traced) | 69.4 tok/s | 13.6 tok/s | — |
+
+Findings:
+1. Wave structure is hardware-INVARIANT (LFM: 32/64 + ~68% mass on both A2000
+   and T4) and model-SPECIFIC (Qwen1.5-MoE: diffuse, 60/120, 38%).
+2. The 10x recurrent-tail stall on the A2000 is an OFFLOAD artifact — uniform
+   on full-GPU T4. Prefetch only pays in offloaded settings.
+3. Naive predictor fails everywhere (0–6.6% exact); learned observer headroom
+   exists where the router is structured (LFM Jaccard to 0.56).
+4. GATE CONTROL: K=4 == native LFM top-k (nu=4) → A≡C token-for-token
+   (timings within 0.3%). Gate K=2/K=1 runs in flight (2026-08-21).
+
 ## 2026-08-20 — FIRST REAL TRACE (office A2000, LFM2.5-8B-A1B Q4_K_M)
 
 Source: `results/trace_lfm_office_20260820.jsonl` (58,344 lines, 4.5 MB)

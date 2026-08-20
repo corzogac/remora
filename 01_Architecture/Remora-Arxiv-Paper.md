@@ -115,6 +115,12 @@ We ablated layer depth ($L \in [8, 16, 24, 32]$) and persona prompt length ($T \
 ---
 
 ### 4.2 Experiment 2: MoE Expert Prefetching on Activation Wake
+> **Simulation caveat**: all numbers in this subsection come from controlled
+> *simulations* (synthetic random-weight transformers, dim 256, 3,200 routing
+> decisions). They are NOT real-model measurements. Real-hardware results
+> supersede them in §4.4; the simulated "static/last-token" hit rate of 66.22%
+> does not transfer to real MoE models (measured: 0–6.6%, §4.4).
+
 We evaluated 3,200 routing decisions across 16 layers (Top-$K=2$, 8 experts) comparing four prediction methods on the autoregressive activation wake.
 
 | Predictor Method | Top-1 Exact Hit Rate | Top-$K$ Overlap Accuracy | Estimated NVMe Stall Reduction |
@@ -134,6 +140,57 @@ We simulated multi-day domain interaction across 5 distinct research workflows (
 - Dynamic tensor $\mathbf{W}_{\text{remora}}$ updated continuously via regularized Hebbian learning:
   $$\Delta \mathbf{W}_{\text{remora}} = \eta \cdot (v \otimes h) - \lambda \mathbf{W}_{\text{remora}}$$
 - **Result**: The internal dynamic attractor smoothly adapted (matrix Frobenius norm stabilized between 1.08 and 1.86), successfully retaining contextual domain resonance without reading or writing textual logs.
+
+---
+
+### 4.4 Real-Hardware Empirical Results (August 2026)
+
+Measured with the instrumented `remora-llama` fork (llama.cpp b10509 + trace
+hooks): every token and MoE layer emits router logits, top-k expert ids,
+expert weights and per-op wall time (`REMORA_TRACE_FILE`); a runtime gate
+(`REMORA_GATE_K`) restricts expert computation to the top-K. Traces analyzed
+with `04_Project/benchmarks/analyze_trace.py`. All runs greedy, single prompt.
+
+| metric | LFM2.5-8B-A1B (A2000) | LFM2.5-8B-A1B (T4) | Qwen1.5-MoE-A2.7B (T4) |
+|---|:---:|:---:|:---:|
+| layers / experts | 22 / 64 | 22 / 64 | 24 / 120 |
+| tokens traced | 102 | 59 | 258 |
+| distinct experts fired | 32/64 | 32/64 | 60/120 |
+| router top-1 prob (mean) | 0.310 | 0.321 | 0.100 |
+| top-1 expert mass share | 67.8% | 67.5% | 37.7% |
+| top-4 expert share | 16.3% | 17.3% | 8.2% |
+| naive predictor: exact-set hit | 4.0% | 6.6% | 0.0% |
+| naive predictor: mean Jaccard | 0.32 | 0.33–0.56 | 0.05–0.10 |
+| moe op cost, most layers | 24–46 µs | 12–14 µs | 13–14 µs |
+| moe op cost, recurrent tail | 274–380 µs (10×) | 12–14 µs | — |
+| throughput (traced) | 13.6 tok/s | 69.4 tok/s | — |
+
+Findings:
+
+1. **The expert path is real and model-specific.** LFM concentrates routing
+   (32/64 experts fire; top-1 holds ~68% of the routed mass on both A2000 and
+   T4 — hardware-invariant), while Qwen1.5-MoE is diffuse (60/120; 38%). The
+   "wave" structure is a property of the trained router, reproducible across
+   hardware.
+2. **The trivial predictor fails on real models.** "Same top-k as last token"
+   hits 0.0–6.6% exact-set. The simulated 66.22% (§4.2) does not transfer.
+   A learned observer has headroom exactly where the router is structured
+   (LFM: Jaccard up to 0.56) and little where it is flat (Qwen: 0.08).
+3. **The stall surface is an offload artifact, not intrinsic.** LFM's last-5
+   recurrent layers cost 10× the others on the partially-offloaded A2000
+   (274–380 µs vs 24–46 µs) but are uniform (12–14 µs) on a full-GPU T4.
+   Prefetching hides *offload/PCIe* latency; on full-GPU hardware there is
+   nothing to hide. This scopes the claim honestly.
+4. **Gate control is exact.** Gating to the native K (=4 for LFM) reproduces
+   the ungated run token-for-token (identical response, timings within 0.3%).
+   Gating to K=2/K=1 (the "activate only y%" experiment) is in progress.
+
+**Result (honest framing)**: expert predictability differs qualitatively by
+architecture and by hardware; a learned importance observer conditioned on
+router logits (and recurrent state where present) is the candidate mechanism,
+and its benefit is measurable only in offloaded settings. This is a
+predictability study with an honest negative baseline, not a claim of having
+invented routing.
 
 ---
 
@@ -163,12 +220,21 @@ NVMe stall reduction — figures below the headline values stated in the abstrac
 traced to reproducible runs, readers should treat the abstract's upper bounds as
 aspirational.
 
-**V2 program** (in progress, see `04_Project/Remora-V2-Experiment-Plan.md`):
-1. Replace all simulation metrics with real-model measurements on llama.cpp (CUDA),
-   primary model LFM2.5-8B-A1B (MoE, 1B active) on an RTX A2000 4 GB host.
-2. Standardize metric definitions (Top-K with explicit K; stall measured as wall-clock
-   I/O wait), report mean ± std across runs, and update this draft accordingly.
-3. Publish the instrumented `remora-llama` fork and trace analysis tools with the paper.
+**V2 program** — status (2026-08-20), see `04_Project/PLAN.md`:
+1. **Instrumented fork is real and running**: llama.cpp b10509 + trace hooks
+   (`REMORA_TRACE_FILE`) + runtime gate (`REMORA_GATE_K`); builds CUDA on
+   Windows (office A2000) and Linux (HF T4, static sm_75). Fork:
+   `corzogac/llama-cpp-remora` (private, branch `remora-trace`).
+2. **Real measurements replace simulations (§4.4)**: the simulation-derived
+   top-K overlap (94.06%) and stall reduction (~86.5%) are NOT reproduced;
+   the real naive-predictor baseline is 0–6.6% exact-set. The abstract's
+   upper bounds remain aspirational and will be rewritten from §4.4 data.
+3. **Honest negative baseline**: "same top-k as last token" fails on real
+   MoE; the learned-observer hypothesis is the next milestone (Unsloth LoRA
+   training on the trace corpus, `04_Project/PLAN.md` Exp D/F).
+4. **Reproducibility**: traces + responses in private HF datasets
+   `gcorzo/remora-bin` / `gcorzo/remora-traces`; weekly T4 baseline scheduled;
+   analyzer + trace corpus committed with the repo.
 
 ---
 

@@ -172,6 +172,32 @@ NOTE: this binary predates the gate fix (3e894f758) but runs WITHOUT
 REMORA_GATE_K, so it is a valid baseline. The gate1 rerun uses the rebuilt
 binary (bundle + remora-gate-fix.patch).
 
+## 2026-08-21 — ORNITH L4 GATE K=1 FINAL (fixed binary) — gating is NOT viable
+
+Rebuilt sm8x binary WITH gate fix 3e894f758, REMORA_GATE_K=1, same flags.
+Server loaded and passed health — the fix works (no crash).
+
+But ALL 3 completions returned HTTP 500: "The model produced output that
+does not match the expected peg-native format". No content, no timings.
+
+Trace forensics (ornith_l4_gate1.jsonl, 89MB):
+- ~193 tokens decoded per run vs 73-74 baseline: the gated model rambled to
+  near max_tokens and never produced a valid template ending (output garbage).
+- Per-token expert FFN roughly halved (down 1.4->0.6 ms, gate 1.3->0.5 ms)
+  — the gate does what it says on the compute side.
+- 256 experts still selected (top-1 routing over 579 tokens/layer); exact
+  persistence 13.6% (single-element sets).
+- Same failure class seen earlier on LFM gate runs (empty responses).
+
+Verdict: expert FFN is only ~10% of L4 decode time (3.9 ms of ~37 ms/token
+at 27 tok/s), so even perfect gating caps at ~5% speedup — while destroying
+output fidelity on a flat router (top-1 weight median 3.1%; the 2nd expert
+carries too much mass to drop). Hard gating is a dead end on this model
+class on ANY host. Remora's lever remains prefetch/latency-hiding.
+
+Results: results/ornith-office/l4/ornith_l4_gate1.json. This closes the gate
+experiment (office attempt retracted; L4 attempt is definitive).
+
 Honest boundary result for the paper: on the offload-bound regime, remora's
 prefetch/observer direction is the lever; compute gating is a dead end.
 

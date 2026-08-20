@@ -1,0 +1,28 @@
+{
+  "experiment": "ornith-1.5-35b-a3b-l4-fullgpu-gate1-final",
+  "date": "2026-08-21",
+  "platform": "HF Jobs l4x1 (Nvidia L4 24GB)",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M",
+  "runtime": "remora-llama fork sm8x Linux build WITH gate fix 3e894f758 (applied via remora-gate-fix.patch)",
+  "server_args": "-ngl 90 -c 8192 --reasoning off --reasoning-budget 0, REMORA_GATE_K=1",
+  "outcome": {
+    "server_start": "OK (HEALTH_OK)",
+    "completions": "all 3 returned HTTP 500: 'The model produced output that does not match the expected peg-native format'",
+    "responses": "error bodies only, no content, no timings",
+    "tokens_decoded": "~193 per run (vs 73-74 baseline) — gated model rambled to near max_tokens, never produced a valid template ending"
+  },
+  "trace_evidence": {
+    "baseline_ornith_l4_base.jsonl": "222 tokens/layer (~74/run), 256 experts used, exact persistence 0.0%, jaccard 21.8%",
+    "gate1_ornith_l4_gate1.jsonl": "579 tokens/layer (~193/run), 256 experts used (top-1 selections), exact persistence 13.6% (single-element sets)",
+    "expert_ffn_per_token_ms": {"baseline": {"down": 1.4, "gate": 1.3, "up": 1.2}, "gate1": {"down": 0.6, "gate": 0.5}},
+    "note": "gate halves the expert matmul cost as designed"
+  },
+  "verdict": {
+    "compute_saving": "expert FFN per token roughly halved (1.4->0.6 ms down etc.)",
+    "but": "expert FFN is only ~10% of decode time on L4 (3.9 of ~37 ms/token at 27 tok/s); max theoretical speedup from full gating ~5%",
+    "output_damage": "catastrophic — output fails template parsing (500), 2.6x token rambling; same failure seen on LFM gate runs (empty responses)",
+    "conclusion": "hard expert-gating (top-2 -> top-1) is NOT viable on this model class: flat routers spread weight mass across experts (top-1 weight median 3.1%), so dropping the 2nd expert destroys fidelity for a ~5% ceiling. Remora's value stays in prefetch/latency-hiding, not compute reduction.",
+    "paper_value": "clean honest negative boundary: gating kills output before it can pay on any host"
+  },
+  "cost": "build job ~$0.03 (cpu-upgrade) + 2x L4 runs ~$0.50"
+}

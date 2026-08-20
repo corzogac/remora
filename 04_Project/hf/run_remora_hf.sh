@@ -8,6 +8,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq > /dev/null 2>&1 || true
 apt-get install -y -qq curl ca-certificates python3-pip > /dev/null 2>&1 || true
+python3 -m pip install -q huggingface_hub 2>/dev/null || pip3 install -q huggingface_hub
 export HF_TOKEN="${HF_TOKEN}"
 cd /tmp
 curl -sL -H "Authorization: Bearer ${HF_TOKEN}" -o remora-bin.tar.gz "https://huggingface.co/datasets/gcorzo/remora-bin/resolve/main/remora-bin-linux-sm75.tar.gz"

@@ -8,6 +8,7 @@ echo BUILD_START
 apt-get update -qq > /dev/null
 apt-get install -y -qq build-essential cmake ninja-build git curl python3-pip > /dev/null
 echo DEPS_OK
+python3 -m pip install -q huggingface_hub 2>/dev/null || pip3 install -q huggingface_hub
 cd /tmp
 curl -sL -H "Authorization: Bearer ${HF_TOKEN}" -o remora.bundle "https://huggingface.co/datasets/gcorzo/remora-bin/resolve/main/remora-trace.bundle"
 ls -la remora.bundle
@@ -16,7 +17,7 @@ cd /tmp/llama-cpp-remora
 git checkout remora-trace 2>&1 | tail -1
 git log -1 --oneline
 echo CONFIGURE
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=ON
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DLLAMA_BUILD_SERVER=ON
 echo BUILDING
 cmake --build build --target llama-server -j $(nproc)
 cd build/bin

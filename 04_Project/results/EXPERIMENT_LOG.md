@@ -127,3 +127,30 @@ warming in page cache. Expert page-ins are ~half the achievable throughput
 on this host; prefetch hides exactly this.
 
 Results: results/ornith-office/ornith_office_baseline.json.
+
+## 2026-08-21 — ORNITH GATE K=1 (office A2000) — compute gating is NOT the lever
+
+REMORA_GATE_K=1: forced top-1 routing (2nd routed expert matmuls skipped),
+3 identical completions, same flags as baseline.
+
+| run | gate1 tok/s | baseline tok/s |
+|---|---|---|
+| 1 (cold) | 3.05 | 3.09 |
+| 2 (warm) | 5.75 | 4.61 |
+| 3 (warm) | 5.91 | 6.36 |
+
+Verdict: no consistent speedup (warm mean +6.3%, within noise). Output drift:
+NONE on this task — both produce the correct iterative fibonacci (functionally
+identical; single sample, not generalizable).
+
+Why: at -ngl 6 with 1-token batches the wall is CPU<->GPU offload sync + cold
+mmap page-ins, not expert FLOPs. nvidia-smi showed 0% GPU util during the
+traced run; traced op wall-times overlap (sum >> decode wall time), so
+removing ops does not remove wall time 1:1. Expert gating can only pay off
+where expert matmuls ARE the critical path -> full-GPU host (HF T4/A10G).
+
+Honest boundary result for the paper: on the offload-bound regime, remora's
+prefetch/observer direction is the lever; compute gating is a dead end.
+
+Results: results/ornith-office/ornith_office_gate1.json.
+Next: gate1 on HF T4 (expert matmuls on-GPU), traced warm multi-shot delta.

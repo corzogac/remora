@@ -1,0 +1,22 @@
+{
+  "n_records": 22440,
+  "traces": [
+    {
+      "file": "trace_ornith.jsonl",
+      "records": 3000
+    },
+    {
+      "file": "trace_ornith3.jsonl",
+      "records": 10600
+    },
+    {
+      "file": "ornith_l4_base.jsonl",
+      "records": 8840
+    }
+  ],
+  "naive_baseline": {
+    "exact_pct": 0.03,
+    "jaccard_pct": 21.06,
+    "n_pairs": 22440
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "experiment": "remora-observer-learnability-probe",
+  "date": "2026-08-21",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M",
+  "data": "observer_dataset (22,440 records: office 3,000 + office3 10,600 + L4 8,840)",
+  "probe": "per-layer cosine-NN on 256-dim router logits -> predict next-token top-2 experts",
+  "within_host_random_split": {
+    "exact_pct": 57.2,
+    "jaccard_pct": 78.9,
+    "argmax_persistence_jaccard": 6.6,
+    "chance_jaccard": 11.8
+  },
+  "cross_host_office_to_l4": {
+    "train": "office traces only (330 pairs/layer, 3 sampled streams)",
+    "test": "L4 full-GPU greedy stream (215 pairs/layer)",
+    "exact_pct": 51.2,
+    "jaccard_pct": 87.4,
+    "jaccard_range_across_layers": "79.3 .. 95.6",
+    "note": "different token streams (office sampled at temp 0.8, L4 greedy at temp 0) — not memorization; same model + same prompt distribution"
+  },
+  "baselines": {
+    "naive_same_topk_exact_pct": 0.03,
+    "naive_same_topk_jaccard_pct": 21.06,
+    "chance_jaccard_pct": 11.8
+  },
+  "interpretation": {
+    "claim": "next-token expert selection is highly predictable from current router logits alone via logit-space similarity; a learned observer beats the identity heuristic by ~4x Jaccard and transfers across hosts",
+    "prefetch_value": "hitting even one of two next experts (Jaccard 87% means at least one hit in nearly all tokens) hides half the expert-fetch stall; exact 51% hides all of it",
+    "caveats": [
+      "same model weights, same coding-task distribution (one prompt family) — generalization to unseen task types not yet measured",
+      "cosine-NN is a lazy probe; a trained MLP must match it at lower inference cost (next step)",
+      "within-host random split is optimistic (adjacent-token correlation); cross-host split is the honest number"
+    ]
+  },
+  "artifacts": ["cosine_probe.py", "cross_host_probe.py", "observer_dataset/ (records.jsonl 30MB local, stats.json, README)"]
+}

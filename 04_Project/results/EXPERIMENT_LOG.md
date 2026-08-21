@@ -198,6 +198,31 @@ class on ANY host. Remora's lever remains prefetch/latency-hiding.
 Results: results/ornith-office/l4/ornith_l4_gate1.json. This closes the gate
 experiment (office attempt retracted; L4 attempt is definitive).
 
+## 2026-08-21 — LEARNED-OBSERVER PROBE — the thesis holds on Ornith
+
+Dataset: 22,440 records (per-layer logits_t -> topk_{t+1}) from the 3 valid
+traces (office 3,000 / office3 10,600 / L4 8,840). Probes (pure numpy):
+
+1. Within-host cosine-NN (70/30 random split): exact 57.2%, Jaccard 78.9%
+   (argmax persistence 6.6%, chance 11.8%; naive same-topk 0.03%/21.1%).
+2. CROSS-HOST: train on office traces only, test on L4 full-GPU greedy
+   stream — different token streams (office sampled temp 0.8, L4 greedy):
+   exact 51.2%, Jaccard 87.4% (per-layer Jaccard 79.3-95.6%).
+
+Interpretation:
+- Next-token expert selection is predictable from router logits alone via
+  logit-space similarity; the observer beats the identity heuristic by ~4x
+  Jaccard and TRANSFERS across hosts (cheap box trains it, fast box uses it).
+- Prefetch value: Jaccard 87% = at least one of the two next experts hit on
+  nearly every token (hides half the stall); exact 51% = both experts (hides
+  it all).
+- Caveats: same model + same task family (one coding prompt) — task-type
+  generalization unmeasured; cosine-NN is a lazy probe, a trained MLP must
+  match it at lower cost (next step).
+
+Results: results/ornith-office/observer_probe_results.json. Scripts:
+cosine_probe.py, cross_host_probe.py, convert_traces_to_observer_dataset.py.
+
 Honest boundary result for the paper: on the offload-bound regime, remora's
 prefetch/observer direction is the lever; compute gating is a dead end.
 

@@ -243,3 +243,22 @@ constant on both sides AND control for warm-up state (run count parity).
 - Drift is qualitative: same prompt, different (still good) haiku at K=2.
   K=1 is below the model's viability threshold — the cliff sits in (2,4].
 - Control stands: K=4 == native == byte-identical to the ungated run.
+
+## 2026-08-21 — GATE K=2 ON OFFICE A2000 (offload regime) — op-level results
+
+Per-op MoE cost, K=4 vs K=2 (same box, traced, compare_traces.py):
+
+| layer group | K=4 mean | K=2 mean | ratio |
+|---|---|---|---|
+| layers 2-18 | 24-29 us | 23-25 us | ~0.90 |
+| recurrent tail 19-23 | 274-380 us | 192-250 us | **0.66-0.73** |
+
+- The gate cuts expert-matmul cost ~34% in the stall-heavy recurrent tail
+  (offload regime) and ~7% elsewhere. Mechanism proven at op level.
+- End-to-end tok/s dropped (13.6 -> 7.7) because K=2 CHANGES OUTPUT BEHAVIOR
+  on LFM (verbose/self-correcting, 256 vs 99 tokens) and trace I/O scales
+  with tokens. Behavior drift confounds end-to-end timing on this small box;
+  op-level cost is the clean measurement.
+- Combined with T4 full-GPU (+5.2% at K=2), the honest picture: gating halves
+  the expert work where it blocks (offload tail), gains depend on hardware
+  regime and on the drift-vs-behavior tradeoff of the target model.

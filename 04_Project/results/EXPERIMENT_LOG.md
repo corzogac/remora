@@ -225,3 +225,21 @@ this host. No output drift from tracing (all 3 completions correct).
 
 Implication for the paper: before/after comparisons must keep instrumentation
 constant on both sides AND control for warm-up state (run count parity).
+
+## 2026-08-20 — GATE EXPERIMENT RESULTS (LFM on T4, fixed engine)
+
+| config | throughput | output |
+|---|---|---|
+| K=4 (native, traced) | 69.4 tok/s | baseline haiku |
+| K=2 (gated) | 73.0 tok/s (+5.2%) | coherent DIFFERENT haiku (drift) |
+| K=1 (gated) | HTTP 500 | peg-format violation — model breaks |
+
+- Gate fix (views/aggregation loops now use gated n_expert_used) validated:
+  K=2 runs end-to-end; K=1 crashes the output parser, not the engine.
+- Speedup on full-GPU T4 is small (+5.2%) — expert matmuls are a minor
+  fraction of decode there AND both runs pay identical trace overhead.
+  The offload regime (office A2000, 10x recurrent tail) is where the gate
+  payoff should be measured next (office rebuild pending).
+- Drift is qualitative: same prompt, different (still good) haiku at K=2.
+  K=1 is below the model's viability threshold — the cliff sits in (2,4].
+- Control stands: K=4 == native == byte-identical to the ungated run.

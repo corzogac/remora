@@ -30,6 +30,7 @@ curl -s http://localhost:8080/v1/chat/completions -H "Content-Type: application/
 echo "===RESPONSE==="
 cat /tmp/resp.json
 kill $SRV 2>/dev/null || true
+if ! kill -0 $SRV 2>/dev/null; then echo "===SERVER_EXITED==="; tail -30 /tmp/srv.log; fi
 echo "===TRACE_STATS==="
 wc -l /tmp/trace.jsonl
 python3 - "$HF_TOKEN" <<'EOF'

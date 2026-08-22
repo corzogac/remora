@@ -1,0 +1,30 @@
+{
+  "deployment": "poseidon-remora-core",
+  "date": "2026-08-22",
+  "host": "Poseidon (100.118.223.14, HP Zbook 15 G3, i7-6700HQ 4C/8T Skylake, 32GB, Win10 Education, Quadro M1000M 2GB)",
+  "binary": "remora-llama fork static-CRT build (b10510, commit 1d66c71d5, trace hook) — single 19.3MB exe, MSVC /MT, CPU-only, AVX2/FMA/F16C target (GGML_NATIVE=OFF)",
+  "model": "ornith-ai/Ornith-1.5-35B-A3B Q4_K_M (21,713,462,848 bytes)",
+  "server_args": "-c 65536 -ctk q8_0 -ctv q8_0 -ngl 0 --threads 8 --parallel 2 --port 11435 --api-key (see start_ornith_p.bat)",
+  "endpoint": "http://100.118.223.14:11435/v1 (Tailscale-reachable; http://127.0.0.1:11435/v1 locally)",
+  "performance": {
+    "cold_first_completion_gen_tok_s": 1.36,
+    "warm_steady_gen_tok_s": [7.78, 7.65, 7.55],
+    "note": "remora-MT AVX2 build is ~2.4x faster than the official Clang b10509 measured earlier on this host (3.2 warm); MMX/MSVC vectorization differences + warm pages"
+  },
+  "trace_hook": {
+    "status": "CONFIRMED on third host",
+    "file": "trace_poseidon.jsonl 15.66MB (test completion incl. reasoning tokens)",
+    "evidence": "router/topk/weights/op records present; same model weights -> deterministic router logits vs office/L4"
+  },
+  "operational": {
+    "boot": "schtasks SYSTEM task p_ornith (/sc onstart) -> auto-restart after reboot",
+    "tray": "ornith_tray.ps1 (green/red dot, Start/Stop/Status) in Startup folder; SRV path = C:\\models\\remora-mt.exe",
+    "agents": "pi.dev localhost; Janus Deep + tailnet via 100.118.223.14:11435"
+  },
+  "build_lessons": [
+    "0xC0000135 loader error on Win10: static CRT (/MT, BUILD_SHARED_LIBS=OFF) -> single portable exe",
+    "0xC000001D illegal instruction: GGML_NATIVE=ON bakes the BUILD machine's ISA (AVX-512 on Tiger Lake office) — target AVX2/FMA/F16C for portability to Skylake+",
+    "recipe: 04_Project/tools/poseidon/build_remora_mt.bat"
+  ],
+  "artifacts": ["trace_poseidon.jsonl", "start_ornith_p.bat", "ornith_tray.ps1", "build_remora_mt.bat"]
+}

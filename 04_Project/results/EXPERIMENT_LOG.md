@@ -223,6 +223,28 @@ Interpretation:
 Results: results/ornith-office/observer_probe_results.json. Scripts:
 cosine_probe.py, cross_host_probe.py, convert_traces_to_observer_dataset.py.
 
+## 2026-08-22 — POSEIDON: REMORA STATIC-CRT CORE + 3RD-HOST TRACE
+
+Deployed the remora-llama fork as the OPERATIONAL core on Poseidon
+(HP Zbook 15 G3, i7-6700HQ Skylake, 32GB, Win10):
+- Single 19.3MB exe: MSVC static CRT (/MT, BUILD_SHARED_LIBS=OFF), CPU-only,
+  AVX2/FMA/F16C (GGML_NATIVE=OFF).
+- Endpoint live: http://100.118.223.14:11435/v1, 64K ctx, q8 KV, --parallel 2,
+  API key; auto-restart on boot (schtasks onstart) + tray monitor
+  (ornith_tray.ps1, green/red dot with Start/Stop).
+- Warm steady-state: 7.6-7.8 tok/s (~2.4x the official Clang b10509 measured
+  earlier on this host).
+- TRACE HOOK CONFIRMED on the third host: trace_poseidon.jsonl (15.7MB)
+  captured during the smoke test. Same model weights -> router logits are
+  deterministic vs office/L4; adds a third timing profile to the stall data.
+
+Build lessons (committed in tools/poseidon/build_remora_mt.bat):
+- 0xC0000135 on clean Win10 = missing VC runtime -> static CRT (/MT) fixes it.
+- 0xC000001D illegal instruction = GGML_NATIVE=ON baked AVX-512 (build
+  machine = Tiger Lake office box) -> target AVX2/FMA/F16C for Skylake+.
+
+Results: results/ornith-office/poseidon/poseidon_remora_core.json.
+
 Honest boundary result for the paper: on the offload-bound regime, remora's
 prefetch/observer direction is the lever; compute gating is a dead end.
 

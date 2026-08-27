@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Project Remora: Sub-Symbolic Wave-Dynamics and Symbiotic Latent Inference in Autoregressive Transformers"
+abstract: >-
+  Activation-Trajectory Persistence (ATP) runtime: continuous sub-symbolic
+  inference for MoE transformers — residual activation-wave tracking, predictive
+  MoE expert prefetch, and zero-token latent injection.
+authors:
+  - family-names: Corzo
+    given-names: Gerald Augusto
+    orcid: ""
+date-released: "2026-08-27"
+version: 0.1.0
+license: MIT
+keywords:
+  - mixture-of-experts
+  - inference
+  - activation-trajectory-persistence
+  - expert-prefetching

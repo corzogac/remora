@@ -107,3 +107,22 @@ LFM2.5-8B-A1B MoE) and updates the arXiv draft. Includes:
 **Integrity notice (V1)**: the paper abstract's headline numbers (94.06% Top-K overlap,
 ~86.5% stall reduction) exceed the repo's own experiment report (44.47% Top-K overlap,
 ~40.9% estimated stall reduction). V2 reconciles or rewrites these claims; see the plan §0.
+
+---
+
+## 📜 License & Acknowledgments
+
+**License:** MIT — see [LICENSE](LICENSE). Copyright © 2026 Gerald Augusto Corzo Perez.
+
+**Target engines (integration points, not vendored code):**
+- [llama.cpp](https://github.com/ggml-org/llama.cpp) — MIT license, © ggml-org contributors. The
+  llama.cpp CUDA build is the V2 validation host; `REMORA_TRACE_FILE` instrumentation lives in the
+  `llama-cpp-remora` fork.
+- [Colibri](https://github.com/JustVugg/colibri) — Apache-2.0, © JustVugg. Pure-C disk-streamed MoE
+  engine targeted by the predictive-prefetch prototype.
+
+**Experiment models:**
+- OLMoE-1B-7B (AllenAI) — Apache-2.0 (V1 instrumentation).
+- LFM2.5 (Liquid AI) — see model card for license (V2 validation runs).
+
+**Citation:** see [CITATION.cff](CITATION.cff). Zenodo DOI: minted from the first GitHub release archive.
